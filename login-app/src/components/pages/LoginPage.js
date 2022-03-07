@@ -12,12 +12,11 @@ export default function SignInPage() {
     try {
       await axios.post('http://localhost:8000/users/login', { email, password })
         .then(function (resp) {
-
           window.localStorage.setItem("token", JSON.stringify(resp.data.message));
           history.push('/home');
-        }).catch(function (err) {
-          alert(err)
-          console.log(err)
+        }).catch(function (error) {
+          alert(error.response.data.message)
+          console.log(error)
         })
     } catch (err) {
       console.log(err)
