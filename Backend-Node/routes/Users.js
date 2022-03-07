@@ -3,12 +3,30 @@ const router = express.Router();
 
 const users = [{
     "id": 1,
-    "email": "ughapriya@gmail.com",
-    "password": "12345"
+    "name": "James",
+    "email": "James@123.com",
+    "password": "1!23#4",
+    "role": "EMPLOYEE"
 }, {
     "id": 2,
-    "email": "mala@gmail.com",
-    "password": "122"
+    "name": "Peter",
+    "email": "Peter@123.com",
+    "password": "8^23!3",
+    "role": "EMPLOYEE"
+},
+{
+    "id": 3,
+    "name": "John",
+    "email": "John@123.com",
+    "password": "98!891",
+    "role": "ADMIN"
+},
+{
+    "id": 4,
+    "name": "Fred",
+    "email": "Fred@123.com",
+    "password": "69651",
+    "role": "ADMIN"
 }];
 
 //Get all user details
@@ -86,9 +104,9 @@ router.get('/:id', (req, res) => {
         const userId = req.params.id;
         console.log('userID, ', userId)
         let result = users.find(user => user.id == userId);
-        if(result){
+        if (result) {
             return res.status(200).send(result)
-        }else{
+        } else {
             return res.status(404).send('User Not Found');
         }
     } catch (err) {
@@ -101,15 +119,20 @@ router.get('/:id', (req, res) => {
 router.post('/login', (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log(`${username} and ${password}`);
+        console.log(`${email} and ${password}`);
         let result = users.find(user => user.email === email);
         console.log(`response: `, result);
         if (result) {
             if (result.password === password) {
-                console.log('hit');
-                res.status(200).send({
-                    message: result
-                })
+                if (result.role == 'ADMIN') {
+                    res.status(200).send({
+                        message: users
+                    })
+                } else {
+                    res.status(200).send({
+                        message: [result]
+                    })
+                }
             } else {
                 res.status(401).send({
                     message: "Password incorrect!"
