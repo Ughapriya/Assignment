@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const pool = require('./database.js')
 
-const users = [{
+/* const users = [{
     "id": 1,
     "name": "James",
     "email": "James@123.com",
@@ -27,11 +28,14 @@ const users = [{
     "email": "Fred@123.com",
     "password": "69651",
     "role": "ADMIN"
-}];
+}]; */
 
 //Get all user details
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
     try {
+        let conn = await pool.getConnection();
+        var query = "select * from employees";
+        var users = await conn.query(query);
         users.sort((a, b) => {
             return a.email.localeCompare(b.email);
         })
@@ -99,15 +103,16 @@ router.get('/', (req, res) => {
  */
 
 //Get users information by user ID
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
         const userId = req.params.id;
-        console.log('userID, ', userId)
-        let result = users.find(user => user.id == userId);
-        if (result) {
-            return res.status(200).send(result)
-        } else {
+        let conn = await pool.getConnection();
+        const query = 'SELECT id, name, email, password, role FROM employees WHERE id=?';
+        var users = await conn.query(query, userId);
+        if (users.length == 0) {
             return res.status(404).send('User Not Found');
+        } else {
+            return res.status(200).send(users)
         }
     } catch (err) {
         console.log('err: ', err);
@@ -116,32 +121,29 @@ router.get('/:id', (req, res) => {
 });
 
 //Validate user details by login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         console.log(`${email} and ${password}`);
-        let result = users.find(user => user.email === email);
-        console.log(`response: `, result);
-        if (result) {
-            if (result.password === password) {
-                if (result.role == 'ADMIN') {
-                    res.status(200).send({
-                        message: users
-                    })
-                } else {
-                    res.status(200).send({
-                        message: [result]
-                    })
-                }
-            } else {
-                res.status(401).send({
-                    message: "Password incorrect!"
-                })
-            }
-        } else {
+        let conn = await pool.getConnection();
+        const query = `SELECT id, name, email, password, role FROM employees WHERE email='${email}' AND password= '${password}'`;
+        var users = await conn.query(query);
+        if (users.length == 0) {
             res.status(401).send({
                 message: "The email or the password is not correct"
             })
+        } else {
+            if (users[0].role == 'ADMIN') {
+                var query1 = "select * from employees";
+                var resp = await conn.query(query1);
+                res.status(200).send({
+                    message: resp
+                })
+            } else {
+                res.status(200).send({
+                    message: users
+                })
+            }
         }
     } catch (err) {
         console.log('err: ', err);
